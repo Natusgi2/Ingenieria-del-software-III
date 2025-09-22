@@ -1,4 +1,7 @@
 const { connect, disconnect, tables } = require('./data/database');
+const InMemoryOrderDao = require('./Dao/InMemoryOrderDao');
+const OrderRepository = require('./Repositorio/OrderRepository');
+
 const OrderService = require('./services/OrderService');
 
 async function main() {
@@ -16,6 +19,8 @@ async function main() {
         tables.products.push({ id: 'p3', name: 'Molinillo manual', price: 35 });
     }
 
+    const dao = new InMemoryOrderDao();
+    const Repositorio = new OrderRepository(dao);
     const orderService = new OrderService();
 
     console.log('Productos disponibles:');
