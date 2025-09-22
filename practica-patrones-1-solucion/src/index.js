@@ -1,26 +1,14 @@
-<<<<<<< HEAD
-const { connect, disconnect, tables } = require('./data/database');
-const InMemoryOrderDao = require('./Dao/InMemoryOrderDao');
-const OrderRepository = require('./Repositorio/OrderRepository');
-
-=======
-const { connect, disconnect, getPool } = require('./data/database');
->>>>>>> 48ba63eea6d7cdcf2a4770d4d27a4f9376439cd6
-const OrderService = require('./services/OrderService');
+const { connect, disconnect } = require('./data/database');
+const { buildContainer } = require('./setup/container');
 
 async function main() {
     await connect();
 
-    // Datos ya vienen del seed SQL (db/init.sql)
-    const pool = getPool();
-    const products = await pool.query('SELECT id, name, price FROM products ORDER BY id');
-
-    const dao = new InMemoryOrderDao();
-    const Repositorio = new OrderRepository(dao);
-    const orderService = new OrderService();
+    const { orderService, productDAO } = buildContainer();
+    const products = await productDAO.listAll();
 
     console.log('Productos disponibles:');
-    for (const p of products.rows) {
+    for (const p of products) {
         console.log(`- ${p.id} | ${p.name} | $${Number(p.price)}`);
     }
 
