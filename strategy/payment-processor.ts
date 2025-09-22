@@ -1,5 +1,8 @@
 // payment-processor.ts
 
+import { TarjetaStrategy } from './strategies/tarjeta_strategy';
+import { PayPalStrategy } from './strategies/paypal_strategy';
+import { MercadoPagoStrategy } from './strategies/mercadopago_strategy';
 // NO MODIFICAR ESTE ENUM
 enum MetodoDePago {
     TARJETA = 'tarjeta',
@@ -7,64 +10,62 @@ enum MetodoDePago {
     MERCADOPAGO = 'mercadopago',
 }
 
+interface EstrategiaDePago {
+    procesar(monto: number): void;
+}
+
+// payment-processor.ts
+
+
 class ProcesadorDePagos {
-    private metodoDePago: MetodoDePago;
     private monto: number;
+    private estrategia: EstrategiaDePago;
+
+    // Asociamos cada método con su estrategia correspondiente
+    private readonly estrategias: Record<MetodoDePago, EstrategiaDePago> = {
+        [MetodoDePago.TARJETA]: new TarjetaStrategy(),
+        [MetodoDePago.PAYPAL]: new PayPalStrategy(),
+        [MetodoDePago.MERCADOPAGO]: new MercadoPagoStrategy(),
+    };
 
     constructor(monto: number) {
         this.monto = monto;
-        // Por defecto, se usa tarjeta de crédito
-        this.metodoDePago = MetodoDePago.TARJETA; 
+        // Por defecto, usamos tarjeta
+        this.estrategia = this.estrategias[MetodoDePago.TARJETA];
+        console.log(`Método de pago inicial: ${MetodoDePago.TARJETA}`);
     }
 
     public setMetodoDePago(metodo: MetodoDePago): void {
-        this.metodoDePago = metodo;
-        console.log(`Método de pago cambiado a: ${this.metodoDePago}`);
+        const estrategia = this.estrategias[metodo];
+        if (!estrategia) {
+            throw new Error(`Estrategia no encontrada para el método: ${metodo}`);
+        }
+        this.estrategia = estrategia;
+        console.log(`Método de pago cambiado a: ${metodo}`);
     }
 
     public procesarPago(): void {
         console.log(`Iniciando procesamiento de pago por $${this.monto}...`);
-
-        if (this.metodoDePago === MetodoDePago.TARJETA) {
-            // Lógica específica para tarjetas de crédito
-            console.log("Validando información de la tarjeta...");
-            console.log("Contactando al banco emisor...");
-            console.log(`¡Pago con TARJETA de $${this.monto} procesado exitosamente!`);
-
-        } else if (this.metodoDePago === MetodoDePago.PAYPAL) {
-            // Lógica específica para PayPal
-            const emailUsuario = "usuario@ejemplo.com";
-            console.log(`Redirigiendo al usuario a PayPal para autenticación...`);
-            console.log(`Procesando pago para la cuenta de PayPal: ${emailUsuario}`);
-            console.log(`¡Pago con PAYPAL de $${this.monto} procesado exitosamente!`);
-
-        } else if (this.metodoDePago === MetodoDePago.MERCADOPAGO) {
-            // Lógica específica para MercadoPago
-            const idDePago = Math.floor(Math.random() * 100000);
-            console.log(`Generando link de pago de MercadoPago...`);
-            console.log(`ID de Transacción: ${idDePago}`);
-            console.log(`¡Pago con MERCADOPAGO de $${this.monto} procesado exitosamente!`);
-        }
-        // -----------------------------------------------------------
-
+        this.estrategia.procesar(this.monto);
         console.log("--------------------------------\n");
     }
 }
 
-
 // ----- Simulación de la ejecución en la tienda online -----
-console.log("Cliente realiza una compra de $150.");
+console.log("Cliente realiza una compra de $150.\n");
 const procesador = new ProcesadorDePagos(150);
 
-// El cliente paga con el método por defecto (Tarjeta)
+// Pago con método por defecto (Tarjeta)
 procesador.procesarPago();
 
-// El cliente decide cambiar a PayPal
+// Cambiar a PayPal
 procesador.setMetodoDePago(MetodoDePago.PAYPAL);
 procesador.procesarPago();
 
-// Finalmente, intenta con MercadoPago
+// Cambiar a MercadoPago
 procesador.setMetodoDePago(MetodoDePago.MERCADOPAGO);
 procesador.procesarPago();
 
 export {};
+
+export {EstrategiaDePago};
